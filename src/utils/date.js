@@ -17,6 +17,16 @@ export function daysBetween(startISO, endISO = todayISO()) {
   return Math.floor((end - start) / DAY_MS)
 }
 
+export function addDaysISO(dateISO, days) {
+  const date = new Date(`${dateISO || todayISO()}T00:00:00`)
+  date.setDate(date.getDate() + days)
+  return toISODate(date)
+}
+
+export function cycleKey(plantId, type) {
+  return `${plantId}__${type}`
+}
+
 export function monthOf(dateISO) {
   return dateISO?.slice(0, 7) || ''
 }

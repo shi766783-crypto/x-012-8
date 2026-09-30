@@ -1,5 +1,5 @@
-import { ACHIEVEMENTS } from '../constants/garden'
-import { daysBetween, monthOf, todayISO } from '../utils/date'
+import { ACHIEVEMENTS, CARE_CYCLE_CONFIG, NON_WATERING_CARE_TYPES } from '../constants/garden'
+import { addDaysISO, cycleKey, daysBetween, monthOf, todayISO } from '../utils/date'
 
 export function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -23,10 +23,89 @@ export function getDueWateringPlants(plants, today = todayISO()) {
     .sort((a, b) => statusWeight(b.wateringStatus) - statusWeight(a.wateringStatus))
 }
 
-export function getDashboard(plants, careRecords, growthRecords) {
+// 某植物某类非浇水养护的最近一次操作日期；从未操作过则以购买/建档日为周期起点
+export function getLastCareDate(plant, careRecords, type) {
+  const records = careRecords
+    .filter((record) => record.plantId === plant.id && record.type === type)
+    .map((record) => record.date)
+    .sort()
+  return records[records.length - 1] || plant.purchaseDate || todayISO()
+}
+
+function getCareAdjustment(adjustments, plant, type) {
+  return adjustments?.[cycleKey(plant.id, type)] || { offsetDays: 0 }
+}
+
+// 计算单个非浇水养护周期：下次到期日 = 最近一次操作日 + 频率 + 跳过/顺延偏移
+export function getCareCycleStatus(plant, type, careRecords, adjustments = {}, today = todayISO()) {
+  const config = CARE_CYCLE_CONFIG[type]
+  if (!config) return null
+  const frequency = Number(plant[config.frequencyField])
+  if (!frequency || frequency <= 0) return null
+
+  const lastDate = getLastCareDate(plant, careRecords, type)
+  const adjustment = getCareAdjustment(adjustments, plant, type)
+  const baseDue = addDaysISO(lastDate, frequency)
+  const offsetDays = Number(adjustment.offsetDays) || 0
+  const dueDate = addDaysISO(baseDue, offsetDays)
+  const diff = daysBetween(today, dueDate)
+
+  let status
+  if (diff < 0) status = '已过期'
+  else if (diff === 0) status = '待养护'
+  else status = '未到期'
+
+  return {
+    key: cycleKey(plant.id, type),
+    plantId: plant.id,
+    plantName: plant.name,
+    location: plant.location,
+    type,
+    frequency,
+    lastDate,
+    dueDate,
+    offsetDays,
+    diff,
+    status,
+  }
+}
+
+// 汇总全部植物的非浇水养护周期，到期/过期任务排在前面
+export function getCareCycleTasks(plants, careRecords, adjustments = {}, today = todayISO()) {
+  return plants
+    .filter((plant) => plant.alive !== false)
+    .flatMap((plant) =>
+      NON_WATERING_CARE_TYPES.map((type) =>
+        getCareCycleStatus(plant, type, careRecords, adjustments, today),
+      ).filter(Boolean),
+    )
+    .sort((a, b) => {
+      const weightGap = statusWeight(b.status) - statusWeight(a.status)
+      if (weightGap !== 0) return weightGap
+      if (a.dueDate !== b.dueDate) return a.dueDate.localeCompare(b.dueDate)
+      return a.plantName.localeCompare(b.plantName)
+    })
+}
+
+// 跳过一次：把到期日整体推到下一个周期（偏移按完整频率叠加）
+export function nextSkipOffset(currentOffsetDays, frequency) {
+  const current = Number(currentOffsetDays) || 0
+  return current + frequency
+}
+
+// 顺延一次：从今天起推后指定天数，下一个到期日落在 today + days
+export function postponeOffsetFromToday(task, days, today = todayISO()) {
+  const baseDue = addDaysISO(task.lastDate, task.frequency)
+  return daysBetween(baseDue, addDaysISO(today, days))
+}
+
+export function getDashboard(plants, careRecords, growthRecords, adjustments = {}) {
   const currentMonth = monthOf(todayISO())
   const alivePlants = plants.filter((plant) => plant.alive !== false)
   const duePlants = getDueWateringPlants(plants)
+  const dueCareTasks = getCareCycleTasks(plants, careRecords, adjustments).filter(
+    (task) => task.status === '待养护' || task.status === '已过期',
+  )
   const monthlyFertilizing = careRecords.filter(
     (record) => record.type === '施肥' && monthOf(record.date) === currentMonth,
   ).length
@@ -36,6 +115,7 @@ export function getDashboard(plants, careRecords, growthRecords) {
   return {
     totalPlants: plants.length,
     dueWatering: duePlants.length,
+    dueCare: dueCareTasks.length,
     monthlyFertilizing,
     survivalRate,
     averageScore,
@@ -169,5 +249,7 @@ function countCurrentStreak(descDates) {
 }
 
 function statusWeight(status) {
-  return status === '已过期' ? 2 : status === '待浇水' ? 1 : 0
+  if (status === '已过期') return 2
+  if (status === '待浇水' || status === '待养护') return 1
+  return 0
 }

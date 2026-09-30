@@ -72,7 +72,7 @@ button {
 
 .dashboard {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
   margin: 18px 0;
 }
@@ -108,6 +108,10 @@ button {
 
 .metric.urgent strong {
   color: #b75a24;
+}
+
+.metric.care-due strong {
+  color: #6b4a8f;
 }
 
 .achievement-score strong {
@@ -215,6 +219,154 @@ textarea {
 .reminder-item p {
   margin: 6px 0 0;
   color: #657266;
+}
+
+.care-cycle-panel {
+  border-left: 4px solid #6b4a8f;
+}
+
+.care-group + .care-group {
+  margin-top: 16px;
+}
+
+.care-group-title {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+}
+
+.care-group-title.due {
+  color: #9f372f;
+}
+
+.care-group-title.upcoming {
+  color: #49633f;
+}
+
+.care-list {
+  display: grid;
+  gap: 10px;
+}
+
+.care-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid #e2dcec;
+  border-radius: 8px;
+  background: #fbfaff;
+}
+
+.care-item.upcoming {
+  border-color: #e0e7d9;
+  background: #fdfdf8;
+}
+
+.care-main {
+  min-width: 0;
+}
+
+.care-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.care-main p {
+  margin: 6px 0 0;
+  color: #657266;
+  font-size: 0.88rem;
+}
+
+.care-type-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.care-type-施肥 {
+  background: #8a6d2f;
+}
+
+.care-type-修剪 {
+  background: #2f7d6d;
+}
+
+.care-type-换盆 {
+  background: #9c5f3f;
+}
+
+.care-type-喷药 {
+  background: #6b4a8f;
+}
+
+.care-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.care-btn {
+  min-height: 34px;
+  padding: 4px 12px;
+  border: 1px solid #cfdac7;
+  border-radius: 6px;
+  color: #405341;
+  background: #fffef8;
+  font-size: 0.84rem;
+}
+
+.care-btn.primary {
+  border-color: #6b4a8f;
+  color: #fff;
+  background: #6b4a8f;
+}
+
+.postpone-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #465448;
+  font-size: 0.84rem;
+}
+
+.postpone-box select {
+  width: auto;
+  min-height: 34px;
+  padding: 4px 8px;
+}
+
+.care-settings {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #d8e2cf;
+}
+
+.care-settings summary {
+  color: #49633f;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.care-settings-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr minmax(110px, 0.5fr) auto;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.care-settings-row input {
+  min-height: 38px;
 }
 
 .empty-state {
@@ -465,6 +617,10 @@ dd {
     padding-right: 0;
     border-right: 0;
   }
+
+  .care-settings-row {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 720px) {
@@ -490,6 +646,19 @@ dd {
 
   .metric {
     min-height: 86px;
+  }
+
+  .care-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .care-actions {
+    justify-content: flex-start;
+  }
+
+  .care-settings-row {
+    grid-template-columns: 1fr;
   }
 
   .timeline-item {

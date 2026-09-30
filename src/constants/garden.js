@@ -2,7 +2,18 @@ export const PLANT_CATEGORIES = ['观叶', '观花', '多肉', '蔬菜', '香草
 export const LOCATIONS = ['阳台', '客厅', '卧室', '庭院', '其他']
 export const LIGHT_NEEDS = ['全阳', '半阴', '耐阴']
 export const CARE_TYPES = ['浇水', '施肥', '修剪', '换盆', '喷药']
+export const NON_WATERING_CARE_TYPES = ['施肥', '修剪', '换盆', '喷药']
 export const BLOOM_STATES = ['未开花', '花苞期', '盛开', '凋谢']
+
+// 非浇水养护的独立周期配置：频率保存在植物档案各自字段上，0 或留空表示不提醒
+export const CARE_CYCLE_CONFIG = {
+  施肥: { frequencyField: 'fertilizerFrequency', defaultFrequency: 30 },
+  修剪: { frequencyField: 'pruningFrequency', defaultFrequency: 45 },
+  换盆: { frequencyField: 'repottingFrequency', defaultFrequency: 180 },
+  喷药: { frequencyField: 'sprayingFrequency', defaultFrequency: 0 },
+}
+
+export const CARE_POSTPONE_OPTIONS = [3, 7, 14]
 
 export const ACHIEVEMENTS = [
   { id: 'first-plant', name: '初次种植', description: '添加第一株植物', points: 10 },

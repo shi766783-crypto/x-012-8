@@ -13,6 +13,9 @@ const form = reactive({
   lightNeed: '半阴',
   wateringFrequency: 3,
   fertilizerFrequency: 30,
+  pruningFrequency: 45,
+  repottingFrequency: 180,
+  sprayingFrequency: 0,
   purchaseDate: todayISO(),
   lastWateredDate: todayISO(),
   potSize: '',
@@ -79,8 +82,20 @@ function handlePhoto(event) {
       <input v-model.number="form.wateringFrequency" min="1" type="number" />
     </label>
     <label>
-      施肥频率（天）
-      <input v-model.number="form.fertilizerFrequency" min="1" type="number" />
+      施肥频率（天，0=不提醒）
+      <input v-model.number="form.fertilizerFrequency" min="0" type="number" />
+    </label>
+    <label>
+      修剪频率（天，0=不提醒）
+      <input v-model.number="form.pruningFrequency" min="0" type="number" />
+    </label>
+    <label>
+      换盆频率（天，0=不提醒）
+      <input v-model.number="form.repottingFrequency" min="0" type="number" />
+    </label>
+    <label>
+      喷药频率（天，0=不提醒）
+      <input v-model.number="form.sprayingFrequency" min="0" type="number" />
     </label>
     <label>
       购买日期
