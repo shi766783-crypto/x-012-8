@@ -1,6 +1,6 @@
 <script setup>
 import { reactive } from 'vue'
-import { LIGHT_NEEDS, LOCATIONS, PLANT_CATEGORIES } from '../constants/garden'
+import { LIGHT_NEEDS, LOCATIONS, PLANT_CATEGORIES, DEFAULT_CARE_FREQUENCIES } from '../constants/garden'
 import { todayISO } from '../utils/date'
 
 const emit = defineEmits(['submit'])
@@ -12,7 +12,7 @@ const form = reactive({
   location: '阳台',
   lightNeed: '半阴',
   wateringFrequency: 3,
-  fertilizerFrequency: 30,
+  ...DEFAULT_CARE_FREQUENCIES,
   purchaseDate: todayISO(),
   lastWateredDate: todayISO(),
   potSize: '',
@@ -80,7 +80,19 @@ function handlePhoto(event) {
     </label>
     <label>
       施肥频率（天）
-      <input v-model.number="form.fertilizerFrequency" min="1" type="number" />
+      <input v-model.number="form.fertilizerFrequency" min="0" type="number" />
+    </label>
+    <label>
+      修剪频率（天，0 不提醒）
+      <input v-model.number="form.pruningFrequency" min="0" type="number" />
+    </label>
+    <label>
+      换盆频率（天，0 不提醒）
+      <input v-model.number="form.repottingFrequency" min="0" type="number" />
+    </label>
+    <label>
+      喷药频率（天，0 不提醒）
+      <input v-model.number="form.sprayingFrequency" min="0" type="number" />
     </label>
     <label>
       购买日期

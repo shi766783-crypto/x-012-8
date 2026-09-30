@@ -1,5 +1,5 @@
-import { ACHIEVEMENTS } from '../constants/garden'
-import { daysBetween, monthOf, todayISO } from '../utils/date'
+import { ACHIEVEMENTS, CARE_FREQUENCY_FIELDS, CARE_POSTPONE_DAYS, CYCLE_CARE_TYPES } from '../constants/garden'
+import { addDaysISO, daysBetween, monthOf, todayISO } from '../utils/date'
 
 export function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -23,7 +23,88 @@ export function getDueWateringPlants(plants, today = todayISO()) {
     .sort((a, b) => statusWeight(b.wateringStatus) - statusWeight(a.wateringStatus))
 }
 
-export function getDashboard(plants, careRecords, growthRecords) {
+function lastCareDate(plant, type, careRecords) {
+  const dates = careRecords
+    .filter((record) => record.plantId === plant.id && record.type === type)
+    .map((record) => record.date)
+    .sort()
+  return dates[dates.length - 1] || plant.purchaseDate || null
+}
+
+// 非浇水养护按各自频率与最近一次操作计算到期日；skip/postpone 只影响当前这一轮
+// adjustments 是以 `${plantId}::${type}` 为键的全局调整表：{ kind: 'skip'|'postpone', date, days }
+export function getCareScheduleItems(plants, careRecords, adjustments = {}, today = todayISO()) {
+  const items = []
+
+  plants
+    .filter((plant) => plant.alive !== false)
+    .forEach((plant) => {
+      CYCLE_CARE_TYPES.forEach((type) => {
+        const frequency = Number(plant[CARE_FREQUENCY_FIELDS[type]]) || 0
+        if (frequency <= 0) return
+
+        const lastDate = lastCareDate(plant, type, careRecords)
+        if (!lastDate) return
+
+        const adjustment = adjustments[`${plant.id}::${type}`] || null
+        let dueDate = addDaysISO(lastDate, frequency)
+        let activeKind = null
+
+        // 新的操作录入后（lastDate 晚于调整日期），旧的跳过/顺延自动失效
+        if (adjustment && adjustment.date >= lastDate) {
+          if (adjustment.kind === 'skip') {
+            dueDate = addDaysISO(adjustment.date, frequency)
+            activeKind = 'skip'
+          } else if (adjustment.kind === 'postpone') {
+            dueDate = addDaysISO(adjustment.date, adjustment.days || CARE_POSTPONE_DAYS)
+            activeKind = 'postpone'
+          }
+        }
+
+        const remaining = daysBetween(today, dueDate)
+        let status
+        if (remaining < 0) {
+          status = '已过期'
+        } else if (remaining === 0) {
+          status = '待养护'
+        } else if (activeKind === 'postpone') {
+          status = '已顺延'
+        } else {
+          status = '即将到期'
+        }
+
+        items.push({
+          key: `${plant.id}::${type}`,
+          plantId: plant.id,
+          plantName: plant.name,
+          location: plant.location,
+          type,
+          frequency,
+          lastDate,
+          dueDate,
+          remaining,
+          status,
+        })
+      })
+    })
+
+  return items
+}
+
+export function getDueCareItems(plants, careRecords, adjustments = {}, today = todayISO()) {
+  return getCareScheduleItems(plants, careRecords, adjustments, today)
+    .filter((item) => item.status === '待养护' || item.status === '已过期')
+    .sort((a, b) => careStatusWeight(b.status) - careStatusWeight(a.status) || a.dueDate.localeCompare(b.dueDate))
+}
+
+export function getUpcomingCareItems(plants, careRecords, adjustments = {}, today = todayISO(), limit = 6) {
+  return getCareScheduleItems(plants, careRecords, adjustments, today)
+    .filter((item) => item.status === '即将到期' || item.status === '已顺延')
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .slice(0, limit)
+}
+
+export function getDashboard(plants, careRecords, growthRecords, dueCareCount = 0) {
   const currentMonth = monthOf(todayISO())
   const alivePlants = plants.filter((plant) => plant.alive !== false)
   const duePlants = getDueWateringPlants(plants)
@@ -36,6 +117,7 @@ export function getDashboard(plants, careRecords, growthRecords) {
   return {
     totalPlants: plants.length,
     dueWatering: duePlants.length,
+    dueCare: dueCareCount,
     monthlyFertilizing,
     survivalRate,
     averageScore,
@@ -170,4 +252,8 @@ function countCurrentStreak(descDates) {
 
 function statusWeight(status) {
   return status === '已过期' ? 2 : status === '待浇水' ? 1 : 0
+}
+
+function careStatusWeight(status) {
+  return status === '已过期' ? 2 : status === '待养护' ? 1 : 0
 }

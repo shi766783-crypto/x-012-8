@@ -72,7 +72,7 @@ button {
 
 .dashboard {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
   margin: 18px 0;
 }
@@ -215,6 +215,125 @@ textarea {
 .reminder-item p {
   margin: 6px 0 0;
   color: #657266;
+}
+
+.reminder-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 18px 0;
+  align-items: start;
+}
+
+.care-reminders-panel {
+  border-color: #d6d3e6;
+  background: rgba(252, 250, 253, 0.95);
+}
+
+.care-metric strong {
+  color: #6a4f9c;
+}
+
+.care-reminder-item {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  border-color: #e2ddef;
+  background: #fdfbfe;
+}
+
+.care-actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.care-btn {
+  min-height: 32px;
+  padding: 4px 12px;
+  color: #5a4486;
+  border: 1px solid #cfc7e4;
+  border-radius: 999px;
+  background: #f1ecfa;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.care-btn:hover {
+  background: #e6def6;
+}
+
+.care-type-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+  min-height: 24px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.care-施肥 {
+  color: #7a5315;
+  background: #f7e5bc;
+}
+
+.care-修剪 {
+  color: #23613d;
+  background: #d8eee0;
+}
+
+.care-换盆 {
+  color: #8a4f2b;
+  background: #f0dccb;
+}
+
+.care-喷药 {
+  color: #4a3b78;
+  background: #e3ddf4;
+}
+
+.care-upcoming {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed #d9d3e8;
+}
+
+.care-upcoming h3 {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+}
+
+.care-upcoming-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.care-upcoming-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.care-upcoming-list time {
+  color: #657266;
+}
+
+.care-upcoming-list em {
+  margin-left: auto;
+  color: #7a856f;
+  font-style: normal;
+}
+
+.care-upcoming-list em.postponed {
+  color: #6a4f9c;
+  font-weight: 700;
 }
 
 .empty-state {
@@ -457,7 +576,8 @@ dd {
   }
 
   .main-grid,
-  .profile-layout {
+  .profile-layout,
+  .reminder-grid {
     grid-template-columns: 1fr;
   }
 

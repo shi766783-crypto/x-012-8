@@ -1,5 +1,6 @@
 <script setup>
 import AchievementBoard from './components/AchievementBoard.vue'
+import CareCycleReminders from './components/CareCycleReminders.vue'
 import DashboardPanel from './components/DashboardPanel.vue'
 import Leaderboards from './components/Leaderboards.vue'
 import PlantForm from './components/PlantForm.vue'
@@ -13,12 +14,16 @@ const {
   state,
   plantsWithStatus,
   dueWateringPlants,
+  dueCareItems,
+  upcomingCareItems,
   dashboard,
   goals,
   achievements,
   leaderboards,
   addPlant,
   addCareRecord,
+  skipCare,
+  postponeCare,
   addGrowthRecord,
   addPestRecord,
   getPlantTimeline,
@@ -38,9 +43,18 @@ const {
 
     <DashboardPanel :achievements="achievements" :dashboard="dashboard" :goals="goals" />
 
+    <section class="reminder-grid">
+      <WateringReminders :plants="dueWateringPlants" />
+      <CareCycleReminders
+        :due-items="dueCareItems"
+        :upcoming-items="upcomingCareItems"
+        @skip="(item) => skipCare(item.plantId, item.type)"
+        @postpone="(item) => postponeCare(item.plantId, item.type)"
+      />
+    </section>
+
     <section class="main-grid">
       <div class="left-column">
-        <WateringReminders :plants="dueWateringPlants" />
         <PlantList :plants="plantsWithStatus" />
       </div>
       <PlantForm @submit="addPlant" />

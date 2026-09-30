@@ -17,6 +17,12 @@ export function daysBetween(startISO, endISO = todayISO()) {
   return Math.floor((end - start) / DAY_MS)
 }
 
+export function addDaysISO(dateISO, days) {
+  const date = new Date(`${dateISO}T00:00:00`)
+  date.setDate(date.getDate() + Number(days))
+  return toISODate(date)
+}
+
 export function monthOf(dateISO) {
   return dateISO?.slice(0, 7) || ''
 }

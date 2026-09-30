@@ -25,6 +25,10 @@ defineProps({
       <span>今日待浇水</span>
       <strong>{{ dashboard.dueWatering }}</strong>
     </article>
+    <article class="metric care-metric">
+      <span>到期养护（施肥等）</span>
+      <strong>{{ dashboard.dueCare }}</strong>
+    </article>
     <article class="metric">
       <span>本月施肥</span>
       <strong>{{ dashboard.monthlyFertilizing }}</strong>

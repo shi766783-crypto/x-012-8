@@ -4,6 +4,23 @@ export const LIGHT_NEEDS = ['全阳', '半阴', '耐阴']
 export const CARE_TYPES = ['浇水', '施肥', '修剪', '换盆', '喷药']
 export const BLOOM_STATES = ['未开花', '花苞期', '盛开', '凋谢']
 
+// 非浇水养护：每种操作对应档案里的频率字段（天），留空或 0 表示不提醒
+export const CYCLE_CARE_TYPES = ['施肥', '修剪', '换盆', '喷药']
+export const CARE_FREQUENCY_FIELDS = {
+  施肥: 'fertilizerFrequency',
+  修剪: 'pruningFrequency',
+  换盆: 'repottingFrequency',
+  喷药: 'sprayingFrequency',
+}
+export const DEFAULT_CARE_FREQUENCIES = {
+  fertilizerFrequency: 30,
+  pruningFrequency: 45,
+  repottingFrequency: 365,
+  sprayingFrequency: 21,
+}
+// 顺延一次默认推迟的天数
+export const CARE_POSTPONE_DAYS = 3
+
 export const ACHIEVEMENTS = [
   { id: 'first-plant', name: '初次种植', description: '添加第一株植物', points: 10 },
   { id: 'plant-five', name: '窗台成林', description: '管理 5 株植物', points: 20 },

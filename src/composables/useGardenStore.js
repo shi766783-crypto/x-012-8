@@ -1,5 +1,5 @@
 import { computed, reactive, watch } from 'vue'
-import { DEFAULT_GOALS } from '../constants/garden'
+import { CARE_FREQUENCY_FIELDS, CARE_POSTPONE_DAYS, DEFAULT_GOALS } from '../constants/garden'
 import { todayISO } from '../utils/date'
 import { loadGardenState, saveGardenState } from '../services/storage'
 import {
@@ -7,8 +7,11 @@ import {
   buildTimeline,
   calculateAchievements,
   createId,
+  getCareScheduleItems,
   getDashboard,
+  getDueCareItems,
   getDueWateringPlants,
+  getUpcomingCareItems,
   getWateringStatus,
   updateWateringGoal,
 } from '../services/gardenRules'
@@ -24,6 +27,9 @@ const demoState = {
       lightNeed: '半阴',
       wateringFrequency: 4,
       fertilizerFrequency: 30,
+      pruningFrequency: 60,
+      repottingFrequency: 365,
+      sprayingFrequency: 21,
       purchaseDate: '2026-08-18',
       lastWateredDate: '2026-09-12',
       potSize: '28cm 陶盆',
@@ -40,6 +46,9 @@ const demoState = {
       lightNeed: '全阳',
       wateringFrequency: 2,
       fertilizerFrequency: 14,
+      pruningFrequency: 45,
+      repottingFrequency: 365,
+      sprayingFrequency: 21,
       purchaseDate: '2026-07-02',
       lastWateredDate: '2026-09-13',
       potSize: '20cm 加仑盆',
@@ -49,6 +58,15 @@ const demoState = {
     },
   ],
   careRecords: [
+    {
+      id: 'care-demo-3',
+      plantId: 'plant-demo-2',
+      date: '2026-08-01',
+      type: '修剪',
+      amount: '疏剪残枝',
+      note: '花后修剪塑形',
+      photo: '',
+    },
     {
       id: 'care-demo-1',
       plantId: 'plant-demo-2',
@@ -101,12 +119,22 @@ const demoState = {
 export function useGardenStore() {
   const storedState = loadGardenState()
   const state = reactive(storedState || demoState)
+  if (!state.careAdjustments) state.careAdjustments = {}
 
   const plantsWithStatus = computed(() =>
     state.plants.map((plant) => ({ ...plant, wateringStatus: getWateringStatus(plant) })),
   )
   const dueWateringPlants = computed(() => getDueWateringPlants(state.plants))
-  const dashboard = computed(() => getDashboard(state.plants, state.careRecords, state.growthRecords))
+  const dueCareItems = computed(() => getDueCareItems(state.plants, state.careRecords, state.careAdjustments))
+  const upcomingCareItems = computed(() =>
+    getUpcomingCareItems(state.plants, state.careRecords, state.careAdjustments),
+  )
+  const careSchedule = computed(() =>
+    getCareScheduleItems(state.plants, state.careRecords, state.careAdjustments),
+  )
+  const dashboard = computed(() =>
+    getDashboard(state.plants, state.careRecords, state.growthRecords, dueCareItems.value.length),
+  )
   const goals = computed(() => updateWateringGoal(state.goals, state.careRecords))
   const achievements = computed(() =>
     calculateAchievements(state.plants, state.careRecords, state.growthRecords, state.pestRecords, goals.value),
@@ -138,6 +166,29 @@ export function useGardenStore() {
       const plant = state.plants.find((item) => item.id === record.plantId)
       if (plant) plant.lastWateredDate = record.date
     }
+
+    // 新一轮操作以实际记录为准，清掉该植物该养护的单次跳过/顺延
+    if (CARE_FREQUENCY_FIELDS[record.type]) {
+      delete state.careAdjustments[`${record.plantId}::${record.type}`]
+    }
+  }
+
+  function adjustCareCycle(plantId, type, kind) {
+    const plant = state.plants.find((item) => item.id === plantId)
+    if (!plant) return
+    const today = todayISO()
+    state.careAdjustments[`${plantId}::${type}`] =
+      kind === 'postpone'
+        ? { kind, date: today, days: CARE_POSTPONE_DAYS }
+        : { kind, date: today }
+  }
+
+  function skipCare(plantId, type) {
+    adjustCareCycle(plantId, type, 'skip')
+  }
+
+  function postponeCare(plantId, type) {
+    adjustCareCycle(plantId, type, 'postpone')
   }
 
   function addGrowthRecord(payload) {
@@ -162,12 +213,17 @@ export function useGardenStore() {
     state,
     plantsWithStatus,
     dueWateringPlants,
+    dueCareItems,
+    upcomingCareItems,
+    careSchedule,
     dashboard,
     goals,
     achievements,
     leaderboards,
     addPlant,
     addCareRecord,
+    skipCare,
+    postponeCare,
     addGrowthRecord,
     addPestRecord,
     getPlantTimeline,
